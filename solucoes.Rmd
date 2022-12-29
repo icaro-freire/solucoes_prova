@@ -160,6 +160,7 @@ peixes_recode <- peixes |>
     )
   ) |>
   dplyr::filter(sexo_recode == "Macho" | sexo_recode == "Fêmea")
+peixes_recode
 ```
 
 Feito isso, podemos responder aos itens.
@@ -482,7 +483,7 @@ dados_cursos %>%
 **Solução.**
 O resultado da execução do código pode ser vista abaixo:
 
-```{r, echo=FALSE}
+```{r}
 notas_cursos |>
   dplyr::select(nome, nota_integral_ampla) |>
   tidyr::drop_na() |> 
@@ -497,11 +498,14 @@ notas_cursos |>
     y = ""
   ) +
   ggplot2::theme_minimal()
-# <!-- ``` -->
+```
 
 Pelo menos duas características são notáveis no gráfico:
+
 1. A média das notas de Medicida é maior do que a médiadas notas do curso Direito; de fato, posicionalmente, o gráfico do curso de Medicina está à direita do gráfico do curso de Direito. 
 2. O gráfico do curso de Medicina é muito mais "homogênio" no sentido de que as notas não mais "concentradas" em torno da média; diferentemente do curso de Direito, cujas notas estão em um espectro maior de variabilidade.
+
+---
 
 ## Dicas
 
@@ -511,6 +515,7 @@ Pelo menos duas características são notáveis no gráfico:
   + O comando `rm(list = ls())` limpa a memória armazenada até aquele momento pelas variáveis no `R`.
 
 ---
+
 ```{r, eval=FALSE}
                                          |//
                                         (o o)
