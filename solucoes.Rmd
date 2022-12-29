@@ -497,7 +497,7 @@ notas_cursos |>
     y = ""
   ) +
   ggplot2::theme_minimal()
-```
+# <!-- ``` -->
 
 Pelo menos duas características são notáveis no gráfico:
 1. A média das notas de Medicida é maior do que a médiadas notas do curso Direito; de fato, posicionalmente, o gráfico do curso de Medicina está à direita do gráfico do curso de Direito. 
