@@ -1,0 +1,529 @@
+---
+title: ""
+output:
+  html_notebook:
+    toc: yes
+    toc_float: yes
+    highlight: tango
+  html_document:
+    toc: yes
+    df_print: paged
+---
+
+![](https://raw.githubusercontent.com/icaro-freire/estat_2020.2/main/img/mont_cabe.png)
+
+## Informações Relevantes
+
+Usaremos algumas bases de dados reais para realização dessa prova.
+Por conta disso, o tempo de resolução será extendido, visto que algumas dessas bases possuem mais de 50 MB, o que pode ocasionar demora no _download_.
+
+As bases de dados serão retiradas de nosso repositório do GitHub e do _site_ 
+[brasil.io](brasil.io).
+
+Faça o _download_ dos seguintes conjuntos de dados:
+
+1. [Salário de Magistrados](https://drive.google.com/u/0/uc?id=1FCdmXKf35dTtmnZQ1XhQPl7sF1MxX7WV&export=download);
+2. [Cursos e notas de corte do PROUNI 2018](https://drive.google.com/u/0/uc?id=1lnqYHylEWT8cN6vPZ-NRR8KfFAPNq43r&export=download)
+3. [Peixes do Rio Madeira](https://github.com/icaro-freire/dados_csv/blob/main/dados/csv/peixes_rio_madeira.csv)
+
+O uso do _software_ `R` é suficiente, mas não necessário.
+Ou seja, você pode usar qualquer outro _software_ que estiver mais familiarizado, todavia, as dicas que serão dadas em algumas questões abaixo, serão voltadas para os usuários do `R`.
+
+## Identificação
+
+**Aluno:** Possíveis Soluções  </br>
+**Data:**  (15/ 12/ 2022)
+
+## Questões (Soluções)
+
+```{r, message=FALSE}
+# importe os dados aqui (read_csv)
+## importando os dados do "Peixes do Rio Madeira"
+peixes <- readr::read_csv("dados/peixes_rio_madeira.csv")
+
+## importando os dados dos salários dos magistrados
+salarios <- readr::read_csv("dados/contracheque.csv")
+
+## importando os dados do Prouni
+notas_cursos <- readr::read_csv("dados/cursos-prouni.csv")
+```
+
+### I. Sobre o _dataset_ `peixes_rio_madeira.csv`
+
+**Questão 01.** Considerando a variável `ordem`, responda:
+
+   a. Faça uma distribuição de frequência da variável `ordem`, ordenando os valores numéricos de forma crescente.
+   b. Qual `ordem` de peixe foi a mais identificada? Quantas foram as observações?
+   c. Quantos não foram identificados na variável `ordem`?
+   d. Faça um gráfico de barras para representar a variável ordem, nesse *dataset*.
+
+**Solução** 
+**a)** Obviamente, existem algumas formas de fazermos esse item. Vou usar a que relaciona os pacotes do tidyverse. A ideia, basicamente, é: após agruparmos o conjunto de dados pela variável `ordem` (`group_by(ordem)`); selecionarmos apenas essa variável (`select(ordem)`); contarmos a quantidades nos grupos (`count()`); e, por fim, ordená-los (`arrange()`). Como denotei meu conjunto de dados por `peixes`, o seguinte conjunto de códigos responde esse item:
+
+```{r}
+peixes |>
+  dplyr::group_by(ordem) |>
+  dplyr::select(ordem) |>
+  dplyr::count() |>
+  dplyr::arrange(n)
+```
+
+**b)** Observando a Tabela de Frequência, a ordem de peixes mais identificada foi a _Clupeiformes_. 
+
+**c)** Pela Tabela de Frequência, 17 peixes não foram identificados na variável ordem.
+
+**d)** Aproveitando a sequência de comandos que usamos para produzir a Tabela de Frequência do item a), vamos usar o `ggplot2` para produzir o gráfico em questão (`geom_col()`). Não usamos cores nas barras por acharmos redundante, mas não há impedimento nessa questão. A sequência abaixo responde ao item (note que a ordenação foi realizada usando o pacote `forcats`).   
+
+```{r}
+peixes |>
+  dplyr::group_by(ordem) |>
+  dplyr::select(ordem) |>
+  dplyr::count() |>
+  ggplot2::ggplot() +
+  ggplot2::aes(x = n, y = forcats::fct_reorder(ordem, n)) +
+  ggplot2::geom_col() +
+  ggplot2::theme_minimal() +
+  ggplot2::labs(
+    x = "",
+    y = "",
+    title = "Frequência da variável ordem"
+  )
+```
+
+
+**Questão 02.** Dentre os peixes que foram coletados da bacia do "Rio Guaporé", após a seleção da `ordem` e do `peso_g`, bem como a eliminação dos elementos não identificados; deseja-se comparar qual das ordens é a mais **homogênea**, no que se refere ao seu peso. 
+Para isso, é necessário comparar a variabilidade do `peso_g` em relação à média. Se a média é igual em cada ordem, usamos o **desvio padrão**. 
+Todavia, se a média em cada ordem é diferente, precisamos padronizar essa medida; e, nesse caso, usamos o **coeficiente de variação** (cv), em porcentagem. 
+Quanto menor a porcentagem do `cv`, mais homogênea é a distribuição do `peso_g`.
+Define-se: $$\text{cv} = \frac{\text{desvio padrão}}{média} \cdot 100$$
+
+   a. Qual medida de variabilidade é mais adequada para essa situação?
+   b. Determine qual das ordens dos peixes da bacia do Rio Guaporé possui distribuição de peso mais homogênea.
+
+**Solução.**
+**a)** A própria questão estabelece alguns parâmetros para que você chegue ao resultado desejado: agrupar pela variável `ordem` (`group_by(ordem)`); filtrar pela bacia do Rio Guaporé (`filter(bacia == "Rio Guaporé")`); selecionar a `ordem` e o `peso_g` (`select(ordem, peso_g)`); e, eliminar os elementos faltantes (os famosos "NA" -- `drop_na()`). 
+Depois disso, precisamos encontrar a média do peso (em gramas) de cada grupo. Se a média é a mesma, usamos o _desvio padrão_; caso contrário, usamos o _coeficiente de variação_. Sumarizar essas médias é simples, se agruparmos pela `ordem` e usarmos a função `summarise(media_peso = mean(peso_g))`, onde a variável "media_peso" é o que desejamos em cada grupo, e `mean(peso_g)` á como faremos esse cálculo. Veja os comando e o resultado abaixo:
+
+```{r}
+peixes |>
+  dplyr::group_by(ordem) |>
+  dplyr::filter(bacia == "Rio Guaporé") |>
+  dplyr::select(ordem, peso_g) |>
+  tidyr::drop_na() |>
+  dplyr::summarise(
+    media_peso = mean(peso_g)
+  )
+```
+Note que, como as médias foram (bem) diferentes em cada grupo, para compará-los é necessário uma padronização. Portanto, a medida de variabilidade mais adequada para essa situação é o _coeficiente de variação_.
+
+**b)** Para analisarmos a distribuição de peixes "mais homogênea", precisamos encontrar qual possui a _menor_ porcentagem do coeficiente de variação. Portanto, precisamos construir uma expressão que calcule o `cv` em cada grupo da variável `ordem`. Pela fórmula, precisamos da "média do peso" e do "desvio padrão". Lembrem-se que esses cálculos devem ser colocados na função `summarise`. Veja um possível código e seu resultado: 
+
+```{r}
+peixes |>
+  dplyr::group_by(ordem) |>
+  dplyr::filter(bacia == "Rio Guaporé") |>
+  dplyr::select(ordem, peso_g) |>
+  tidyr::drop_na() |>
+  dplyr::summarise(
+    media_peso = mean(peso_g),
+    desvio_p   = sd(peso_g),
+    cv         = (desvio_p/ media_peso)*100
+  ) |>
+  dplyr::arrange(cv)
+```
+
+Como o menor _cv_ foi de 78.23 aproximadamente, a ordem associada a ele é a mais homogênea. Ou seja, a ordem _Clupeiformes_.
+  
+**Questão 03.** No que se refere à variável `sexo`, recodifique-a (coloque o nomo nome como `sexo_recode`) para que você possa filtrar apenas os sexos "Macho" e "Fêmea", depois responda:
+
+  a. Qual o aumento, em porcentagem, devemos dar à quantidade de machos para que possua a mesma quantidade referente às fêmeas?
+  b. Selecione as variáveis `peso_g` e `sexo_recode`, dentre os peixes identificados por "Macho" e "Fêmea", qual o sexo do peixe com maior peso?
+  c. Faça um gráfico que represente de forma adequada a quantidade de machos e fêmeas, facetando tal gráfico na variável `bacia`.
+
+**Solução.**
+Para que possamos recodificar corretamente às variáveis, precisamos saber quais são as diferentes denomonações existentes. Para isso, vamos usar a função `distinct()`:
+
+```{r}
+peixes |>
+  dplyr::distinct(sexo)
+```
+Note que, para nossos fins, "Fêmea" e "fêmea" serão indistintos; além de não considerarmos o "Não coletado". Assim, recodificando, e filtrando o que se pede, temos (atribuimos essas mudanças à variável `peixes_recode`):
+
+```{r}
+peixes_recode <- peixes |>
+  dplyr::mutate(
+    sexo_recode = dplyr::recode(
+      sexo,
+      "Fêmea" = "Fêmea",
+      "Macho" = "Macho",
+      "fêmea" = "Fêmea"
+    )
+  ) |>
+  dplyr::filter(sexo_recode == "Macho" | sexo_recode == "Fêmea")
+```
+
+Feito isso, podemos responder aos itens.
+
+**a)** Para respondermos essa questão, é necessário contarmos a quanditade de Machos e Fêmeas. Podemos fazer isso com os comendos:
+
+```{r}
+peixes_recode |>
+  dplyr::count(sexo_recode)
+```
+Sendo assim, se $p$ é a porcentagem que estamos procurando, temos:
+$$21469\cdot p + 21469 = 28331$$
+Daí, encontramos $p=0.3196$. Ou seja, precisamos aumentar em, aproximadamente, $32\%$ à quantidade de machos para que possua a mesma quantidade referente às fêmeas.
+
+**b)** Obviamente, precisamos usar a função `select()` e, depois, `arrange()`. Usamos a função `head()` para selecionar as primeiras linhas:
+
+```{r}
+peixes_recode |>
+  dplyr::select(peso_g, sexo_recode) |>
+  dplyr::arrange(desc(peso_g)) |> 
+  head()
+```
+Claramente, uma _Fêmea_ possui o maior peso dentre esses peixes ($14.6$ kg).
+
+**c)** Primeiro vamos agrupar pela variável `bacia`; depois, contar a quandidade dos peixes pelo sexo recodificado. O sexo será a variável do eixo x e a quantidade $n$ (frequência absoluta) a do eixo y. Após isso, basta escolher a geometria do gráfico como `col` e facetar pela bacia. O código abaixo produz o gráfico desejado:
+
+```{r}
+peixes_recode |>
+  dplyr::group_by(bacia) |>
+  dplyr::count(sexo_recode) |>
+  ggplot2::ggplot() +
+  ggplot2::aes(x = sexo_recode, y = n) +
+  ggplot2::geom_col() +
+  ggplot2::facet_grid(.~bacia) +
+  ggplot2::ggtitle(
+    "Quantidade de Machos e Fêmeas", subtitle = "Distribuido por Bacia"
+  ) +
+  ggplot2::labs(x="", y="Frequência Absoluta") +
+  ggplot2::theme_bw()
+```
+
+**Questão 04.** Faça um gráfico de pontos relacionando o peso (em kilogramas) e o comprimento (em metros), destacando a curva que melhor se adequa aos pontos, colorindo segundo a variável `ordem`. Depois, facete-o por `bacia`. Para ajudar, complete adequadamente o código abaixo (considere a variável `dados_peixes`, o conjunto de dados em questão), substituindo o símbolo "❓❓"  pela  variável  conveniente.
+
+
+```{r, eval=FALSE}
+dados_peixe %>% 
+  select(ordem, peso_g, cp_cm) %>% 
+  ggplot() +
+  aes(x=️ ❓❓/1000, y = ❓❓/100) +
+  geom_point(aes(color = ❓❓), alpha = 0.5) +
+  facet_grid(❓❓~.) +
+  geom_smooth() 
+```
+
+  a. A curva que se adapta aos pontos é (praticamente) a mesma em cada bacia?
+  b. Qual a sua interpretação para esse fato (dica: pesquise sobre a curva de "crescimento logístico" aplicada ao crescimento de população - no caso, de peixes)?
+
+**Solução.**
+
+Os códigos abaixo geram o gráfico em questão:
+
+```{r}
+peixes |>
+  dplyr::group_by(bacia) |>
+  dplyr::select(ordem, peso_g, cp_cm) |>
+  ggplot2::ggplot() +
+  ggplot2::aes(x = peso_g/1000, y = cp_cm/100) +
+  ggplot2::geom_point(
+    ggplot2::aes(color = ordem), alpha = 0.5
+  ) +
+  ggplot2::facet_grid(bacia~.) +
+  ggplot2::geom_smooth()
+```
+
+**a)** Aparentemente, a curva que se adapta aos pontos é (praticamente) a mesma em cada bacia.
+
+**b)** ITEM ANULADO!
+
+### II. Sobre o _dataset_ `contracheque.csv`
+
+Antes de iniciarmos a análise do _dataset_ em questão, vamos conhecê-lo de forma panorâmica:
+
+```{r}
+salarios |> tibble::glimpse()
+```
+
+
+**Questão 05.** Qual o maior rendimento líquido registrado nesse _dataset_?
+
+**Solução.**
+Existem algumas formas de respondermos essa questão. Por exemplo, podemos selecionar a variável `rendimento_liquido` e usar a função `arrange` para colocarmos em ordem decrescente os valores, como no código abaixo:
+
+```{r}
+salarios |>
+  dplyr::select(rendimento_liquido) |>
+  dplyr::arrange(desc(rendimento_liquido)) |> 
+  head()
+```
+Também poderíamos encontrar diretamente o valor, sumarizando a informação do máximo rendimento:
+
+```{r}
+salarios |>
+  dplyr::select(rendimento_liquido) |>
+  tidyr::drop_na() |>
+  dplyr::summarise(
+    max_salario = max(rendimento_liquido)
+  )
+```
+Portanto, o rendimento líquido máximo é de, aproximadamente, $R\$\, 7.267.672,00$.
+Vou até escrever por extenso para você não pensar que errei na digitação: _sete milhões, duzentos e sessenta e sete mil, seiscentos e setenta e dois_ reais.
+
+**Questão 06.** Sabendo-se que o teto constitucional do funcionalismo público é de $\text{R}\$ 39.293,32 $, determine quantos magistrados receberam acima desse valor.
+
+   a. Quantos magistrados ganharam acima de $\text{R}\$ 100.000,00$ ?
+   b. Qual `tribunal` possui maior variabilidade?
+
+**Solução.**
+Para sabermos quantos magistrados recebem acima do teto constitucional, precisamos selcionar a variável `rendimento_liquido` e, depois, filtrarmos condicionando o valor que desejamos. Por fim, realizamos a contagem com `count()`:
+
+```{r}
+salarios |>
+  dplyr::select(rendimento_liquido) |>
+  dplyr::filter(rendimento_liquido >= 39293.32) |>
+  dplyr::count()
+```
+Logo, são $37334$ magistrados que ganham acima do teto constitucional.
+
+**a)** Usando o raciocínio anterior, temos:
+
+```{r}
+salarios |>
+  dplyr::select(rendimento_liquido) |>
+  dplyr::filter(rendimento_liquido >= 100000) |>
+  dplyr::count()
+```
+
+**b)** Para maior variabilidade, precisamos decidir se usaremos o desvio padrão ou o coeficiente de vairação. 
+Para isso, vamos analisar a média em cada tribunal:
+
+```{r}
+salarios |>
+  dplyr::group_by(tribunal) |>
+  dplyr::summarise(
+    media_salarios = mean(rendimento_liquido)
+  )
+```
+Como há médias diferentes em cada tribunal, usaremos o coeficiente de variação; arranjando de forma decrescente esses valores e escolhendo o maior dentre eles:
+
+```{r}
+salarios |>
+  dplyr::group_by(tribunal) |>
+  dplyr::summarise(
+    media_salarios = mean(rendimento_liquido),
+    dp_salarios    = sd(rendimento_liquido),
+    cv_salarios    = (dp_salarios/media_salarios)*100
+  ) |>
+  dplyr::arrange(desc(cv_salarios)) |>
+  dplyr::top_n(1) |>
+  dplyr::select(tribunal)
+```
+Portanto, o _Tribunal Regional do Trabalho da 7ª Região (CE)_ é aquele que possui maior variabilidade.
+
+### Sobre o _dataset_ `cursos_prouni.csv`
+
+Mais uma vez, é essencial analisarmos panoramicamente os dados:
+
+```{r}
+notas_cursos |> tibble::glimpse()
+```
+
+**Questão 07.** Para responder essa questão, complete adequadamente o código abaixo, referente a construção de um *boxplot*  da varivável `nota_integral_ampla`, agrupadas pelo `turno` (estamos considerando a variável `dados_cursos`, como sendo o *dataset* `cursos_prouni.csv`).
+
+```{r, eval=FALSE}
+dados_cursos %>%
+  select(❓❓ , ❓❓) %>% 
+  drop_na() %>% 
+  ggplot() +
+  aes(x = ❓❓, y = ❓❓, fill = ❓❓) +
+  geom_boxplot(show.legend = FALSE) +
+  labs(
+    title = "Comparação das notas por turno",
+    x = "",
+    y = ""
+  ) +
+  scale_fill_viridis_d() +
+  theme_minimal()
+```
+
+  a. Pelo gráfico, qual dos turnos possui a maior mediana das notas? Explique.
+  b. Qual a média e a mediana do turno identificado no item anterior?
+  c. Qual dos cinco turnos possui menor homegeneidade na nota integral ampla?
+  d. Faça um gráfico de densidade dessas notas, facetando-as nos turnos. Esse gráfico também serviria para comparar as notas por turno? Explique.
+
+**Solução.**
+Completando os códigos, temos:
+
+```{r}
+notas_cursos |>
+  dplyr::group_by(turno) |>
+  dplyr::select(turno, nota_integral_ampla) |>
+  tidyr::drop_na() |>
+  ggplot2::ggplot() +
+  ggplot2::aes(x = turno, nota_integral_ampla) +
+  ggplot2::geom_boxplot() +
+  ggplot2::labs(
+    title = "Comparação das notas por turno",
+    x     = "",
+    y     = ""
+  )
+```
+Agora podemos responder as questões.
+
+**a)** O turno _Integral_ possui maior mediana das notas. De fato, a linha horizontal do interior da ``caixa'' representa o segundo quartil, ou mediana dos dados. Comparando a projeção dessa linha no eixo vertical, o turno _Integral_ é o que possui maior medida.
+
+**b)** Olhando apenas pelo gráfico não temos precisão do valor. Precisamos, então, calcular explicitamente esses valores. Para tanto, vamos sumarizar a media e a mediana; depois de ter filtrado o turno; selecionado a variável `nota_integral_ampla`; e ter retirado os elementos faltantes. O código abaixo indica o que precisamos:
+
+```{r}
+notas_cursos |>
+  dplyr::filter(turno == "Integral") |>
+  dplyr::select(nota_integral_ampla) |>
+  tidyr::drop_na() |>
+  dplyr::summarise(
+    media_notas = mean(nota_integral_ampla),
+    mediana_notas = median(nota_integral_ampla)
+  )
+```
+Logo, a media das notas é de $663.1$ e a mediana $657.5$.
+
+**c)** Seguindo o raciocínio das questões anteriores, precisamos comparar as médias depois de ter agrupado por turno e selecionado a variável `nota_integral_ampla` (sem os elementos faltantes). Isso é feito assim:
+
+```{r}
+notas_cursos |>
+  dplyr::group_by(turno) |>
+  dplyr::select(nota_integral_ampla) |>
+  tidyr::drop_na() |>
+  dplyr::summarise(
+    media_notas = mean(nota_integral_ampla)
+  )
+```
+
+Como as médias são diferentes, usaremos como medida de variabilidade o coeficiente de variação, ordenando de forma decrescente:
+
+```{r}
+notas_cursos |>
+  dplyr::group_by(turno) |>
+  dplyr::select(nota_integral_ampla) |>
+  tidyr::drop_na() |>
+  dplyr::summarise(
+    media_notas = mean(nota_integral_ampla),
+    dp_notas    = sd(nota_integral_ampla),
+    cv_notas    = (dp_notas/media_notas) * 100
+  ) |>
+  dplyr::arrange(desc(cv_notas))
+```
+
+Logo, o turno que possui _menor_ homogenedade é o que possui o _MAIOR_ coeficiente de variação, a saber, "Curso a Distância".
+
+**d)** A contrução do gráfico em questão pode ser encontrada no código abaixo:
+
+```{r}
+notas_cursos |>
+  dplyr::group_by(turno) |>
+  ggplot2::ggplot() +
+  ggplot2::aes(x = nota_integral_ampla, fill = turno) +
+  ggplot2::geom_density() +
+  ggplot2::facet_grid(turno~.)
+```
+
+Pelo gráfico, percebemos que a comparação entre os turnos pode ser feita, já que podemos comparar a assimetria dos gráficos, bem como sua posição ao longo do eixo horizontal. Todavia, para esses dados, não há muita precisão, visto que alguns dados são muito semelhantes. O contraste maior é entre o "Curso a Distância" e o "Integral", com relação aos outros. 
+Dessa forma, embora seja possível alguma comparação, não é aconselhável. 
+O box plot gera mais informações para comparação desses dados.
+
+**Questão 08.** Qual a posição ocupa o estado da Bahia, no que se refere à frequência absoluta da variável `uf_busca`, disposta de forma decrescente? 
+
+**Solução.**
+A ideia é agruparmos pela variável `uf_busca` e após realizarmos a contagem, agruparmos por ordem decrescente. Nesta lista gerada observaremos a posição do Estado da Bahia, BA. O código abaixo é o que procuramos:
+
+```{r}
+notas_cursos |>
+  dplyr::group_by(uf_busca) |>
+  dplyr::select(uf_busca) |>
+  dplyr::count() |>
+  dplyr::arrange(desc(n))
+```
+
+Observando a lista, o estado da Bahia encontra-se na $5^\circ$ posição.
+
+**Questão 09.** Quantos cursos foram identificados, distintamente, na variável `nome`?
+
+**Solução.**
+Simplesmente usamos a função `distinct()` para exibirmos os elementos distintos da variável `nome`; e, depois, contamos (`count()`):
+
+```{r}
+notas_cursos |>
+  dplyr::distinct(nome) |>
+  dplyr::count()
+```
+
+Portanto, existem $296$ cursos identificados distintamente.
+
+**Questão 10.** Analise o código abaixo e execute-o (estamos considerando a variável `dados_curso` como sendo o *dataset* `cursos_prouni.csv`). O que você pode concluir com respeito aos cursos exibidos, comparativamente? (cite, pelo menos, duas características gráficas).
+
+```{r, eval=FALSE}
+dados_cursos %>% 
+  select(nome, nota_integral_ampla) %>%
+  drop_na() %>% 
+  filter(nome == "Medicina" | nome == "Direito") %>% 
+  ggplot() +
+  aes(nota_integral_ampla, nome, fill = nome) +
+  geom_density_ridges(show.legend = FALSE) +
+  scale_fill_viridis_d() +
+  labs(
+    title = "Comparação entre Medicina e Direito",
+    x = "",
+    y = ""
+  ) +
+  theme_minimal()
+```
+
+**Solução.**
+O resultado da execução do código pode ser vista abaixo:
+
+```{r, echo=FALSE}
+notas_cursos |>
+  dplyr::select(nome, nota_integral_ampla) |>
+  tidyr::drop_na() |> 
+  dplyr::filter(nome == "Medicina" | nome == "Direito") |>
+  ggplot2::ggplot() +
+  ggplot2::aes(nota_integral_ampla, nome, fill = nome) +
+  ggridges::geom_density_ridges(show.legend = FALSE) +
+  ggplot2::scale_fill_viridis_d() +
+  ggplot2::labs(
+    title = "Comparação entre Medicina e Direito",
+    x = "",
+    y = ""
+  ) +
+  ggplot2::theme_minimal()
+```
+
+Pelo menos duas características são notáveis no gráfico:
+1. A média das notas de Medicida é maior do que a médiadas notas do curso Direito; de fato, posicionalmente, o gráfico do curso de Medicina está à direita do gráfico do curso de Direito. 
+2. O gráfico do curso de Medicina é muito mais "homogênio" no sentido de que as notas não mais "concentradas" em torno da média; diferentemente do curso de Direito, cujas notas estão em um espectro maior de variabilidade.
+
+## Dicas
+
+- Organize seu ambiente de trabalho com um Projeto em R;
+- Carrege os conjuntos de dados separadamente, pois se a memória do seu computador for pequena, pode causar lentidão;
+  + Por exemplo, leia o conjunto de dados `contracheque.csv`, resolva as questões referente a esse tópico e depois, no console, digite `rm(list = ls())`. Aí é só carregar um outro conjunto de dados.
+  + O comando `rm(list = ls())` limpa a memória armazenada até aquele momento pelas variáveis no `R`.
+
+---
+```{r, eval=FALSE}
+                                         |//
+                                        (o o)
+                    +-------------oOO----(_)-----oOO-----------------+
+                    | ______              ______                     |
+                    | | ___ \             | ___ \                    |
+                    | | |_/ / ___   __ _  | |_/ / __ _____   ____ _  |
+                    | | ___ \/ _ \ / _` | |  __/ '__/ _ \ \ / / _` | |
+                    | | |_/ / (_) | (_| | | |  | | | (_) \ V / (_| | |
+                    | \____/ \___/ \__,_| \_|  |_|  \___/ \_/ \__,_| |
+                    |                                                |
+                    +------------------------------------------------+
+                                       |__|__|
+                                        || ||
+                                       ooO Ooo
+```
