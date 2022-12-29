@@ -68,7 +68,7 @@ peixes |>
   dplyr::arrange(n)
 ```
 
-**b)** Observando a Tabela de Frequência, a ordem de peixes mais identificada foi a _Clupeiformes_. 
+**b)** Observando a Tabela de Frequência, a ordem de peixes mais identificada foi a _Characiformes_, com 64356 observações. 
 
 **c)** Pela Tabela de Frequência, 17 peixes não foram identificados na variável ordem.
 
