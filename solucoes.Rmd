@@ -18,7 +18,7 @@ Usaremos algumas bases de dados reais para realização dessa prova.
 Por conta disso, o tempo de resolução será extendido, visto que algumas dessas bases possuem mais de 50 MB, o que pode ocasionar demora no _download_.
 
 As bases de dados serão retiradas de nosso repositório do GitHub e do _site_ 
-[brasil.io](brasil.io).
+<!-- [brasil.io](brasil.io). -->
 
 Faça o _download_ dos seguintes conjuntos de dados:
 
