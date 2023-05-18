@@ -1,0 +1,226 @@
+---
+title: ""
+output:
+  html_notebook:
+    toc: yes
+    toc_float: yes
+    highlight: tango
+  html_document:
+    toc: yes
+    df_print: paged
+---
+
+![](img/titulo_intimacy.png)
+
+## Informações Relevantes
+
+Usaremos duas bases de dados reais para realização dessa prova.
+
+As bases de dados serão retiradas de nosso repositório do GitHub e do _site_ 
+[brasil.io](brasil.io).
+
+Faça o _download_ dos seguintes conjuntos de dados:
+
+1. [Cursos e notas de corte do PROUNI 2018](https://drive.google.com/u/0/uc?id=1lnqYHylEWT8cN6vPZ-NRR8KfFAPNq43r&export=download)
+2. [Gapminter](https://downgit.evecalm.com/#/home?url=https://github.com/icaro-freire/dados_csv/blob/main/dados/csv/gapminder.csv)
+
+O uso do _software_ `R` é suficiente, mas não necessário.
+Ou seja, você pode usar qualquer outro _software_ que estiver mais familiarizado, todavia, as dicas que serão dadas em algumas questões abaixo, serão voltadas para os usuários do `R`.
+
+Por uma questão de organização, num crie seu projeto num diretório por nome `prova1` e organize seus dados assim (é só uma sugestão):
+
+```{bash, eval=FALSE}
+prova1/
+├── dados/
+│   ├── gapminder.csv
+│   └── cursos-prouni.csv
+├── R/
+│   ├── script_gapminder.R
+│   └── script_prouni.R
+├── img/
+│   └── titulo_intimacy.png
+└── prova_seu-nome.Rmd  
+```
+
+a. No diretório `dados/`, salve os _datasets_ que usaremos;
+b. O diretório `R/` é opcional, mas pode servir para _scripts_ de testes; ou seja, você pode fazer os testes para responder as questões separadamente. Então, assim que estiver satisfeito com as respostas (dos códigos) pode inserí-los no arquivo principal (`.Rmd`)
+c. Note que, a figura `titulo_intimacy.png` deve estar salva no diretório `img/`. Também é aconselhável colocar nesse diretório qualquer figura que for usar nas suas respostas (caso use alguma fora dos códigos em R);
+d. O arquivo `prova_seu-nome.Rmd` é o arquivo principal. Nele você faz a "compilação" com o `knit` para `.html`. Você só me entregará o arquivo final, em `html`.
+
+## Identificação
+
+**Aluno:** Coloque seu nome aqui!  </br>
+**Data:**  (31/05/2023)
+
+## Questões
+
+```{r, message=FALSE}
+# importe os dados aqui (read_csv)
+## importando os dados do Prouni
+notas_cursos <- readr::read_csv("dados/cursos-prouni.csv")
+dados_gapminder <- readr::read_csv("dados/gapminder.csv")
+```
+
+### I. Sobre o _dataset_ `gapminder.csv`
+
+**Questão 01.** Responda aos itens abaixo, mostrando como chegou nas respostas.
+
+a. Quantas variáveis e quantas observações existem nesse conjunto de dados?
+b. Indentifique os tipos de variáveis (qualitativas vs quantitativas; e suas subdivisões: nominal ou ordinal, discreta ou contínua)
+
+**Questão 02.** 
+a.Quantos países existem em cada continente? Ou seja, após agrupar por `continente`; exiba (distintamtente) a variável `pais` ; e, conte-os.
+b. Exclua o continente que possui a menor quantidade de países e faça o gráfico de `densidade` da variável `expectativa_de_via`, colocando uma transparência de 70% no argumento da densidade (`alpha = 0.7`). Qual sua interpretação para esse gráfico?
+
+**Questão 03.** Vamos investigar o contraste entre a relação da _expectativa de vida_ e o _pib per capita_ durante um intervalo de 50 anos (1957 até 2007).
+Para tanto, construiremos um gráfico de pontos que possui algumas características: o tamanho do ponto relaciona-se ao tamanho da população; e, a cor do ponto realaciona-se com o continente. 
+
+```{r}
+dados_gapminder |>
+  filter(ano %in% c(1957, 2007)) |>
+  ggplot() +
+  aes(
+    x     = pib_per_capita,
+    y     = expectativa_de_vida,
+    color = continente,
+    size  = populacao
+  ) +
+  geom_point() +
+  facet_grid(.~ano) +
+  labs(
+    title = "Pib Per Capita vs Expectativa de Vida",
+    subtitle = "(num intervalo de 50 anos)",
+    x = "pib per capita",
+    y = "expectativa de vida"
+  ) +
+  theme_bw()
+```
+
+Observe que, em 1957, há um país da Ásia que possui um alto _pib per capita_, embora possua uma expectativa de vida inferior aos 60 anos. Esse alto _pib_ acabou por "aglutinar" os dos outros países. Então, para uma melhor percepção dessas diferenças, mudaremos a escala do PIB (usaremos a escala logarítima):
+
+
+```{r}
+dados_gapminder |>
+  filter(ano %in% c(1957, 2007)) |>
+  ggplot() +
+  aes(
+    x     = pib_per_capita,
+    y     = expectativa_de_vida,
+    color = continente,
+    size  = populacao
+  ) +
+  geom_point() +
+  facet_grid(.~ano) +
+  labs(
+    x = "pib per capita",
+    y = "expectativa de vida"
+  ) +
+  theme_bw() +
+  scale_x_log10()
+```
+
+a. O que você pode afirmar, de uma forma geral e apenas observando o gráfico, sobre a expectavida de vida dos continentes? Ela aumentou ou diminuiu ao longo desses 50 anos em questão?
+b. Em 1957, qual país da Ásia possuia o maior PIB _per capita_? E, nesse mesmo ano, qual possuía a maior expectativa de vida?
+c. Em 2007, encontre a expectativa de vida e o pib _per capita_ dos dois países do item (b). O que aconteceu?
+d. Quais são os dois países com maior população (maior diâmetro do ponto) em 1957 e em 2007? O que aconteceu com o pib per capita e a expectativa de vida deles em 50 anos?
+e. Faça um gráfico de pontos relacionando _pib per capita_ e _expectativa de vida_ durante todos os anos do dataset. Coloque uma reta de regressão nesses dados e responda se há uma tendência positiva ou negativa entre essas variáveis. Use uma escala logarítimica no eixo x (para isso, basta adicionar `scale_x_log10()` à camada do `ggplot()`).
+
+**Questão 04.** As seguintes perguntas estão relacionadas ao continente Africano. 
+a. Encontre os países com menor e maior expectativa de vida no ano de 1952.
+Chame o primeiro de `pais_menor` e o segundo de `pais_maior`. São os mesmos em 2007?
+b. O seguinte conjunto de códigos produz um gráfico de linhas relacionando a expectativa de vida ao longo dos anos, dos países `pais_menor` e `pais_maior`.
+Substitua os nomes adequados e responda: os gráficos são semelhantes? 
+
+```{r, eval=FALSE}
+dados_gapminder |>
+  filter(pais %in% c("pais_menor", "pais_maior")) |>
+  ggplot() +
+  aes(x = ano, y = expectativa_de_vida, color = pais, group = pais) +
+  geom_line() +
+  labs(
+    x = "",
+    y = ""
+  ) +
+  theme_minimal()
+```
+
+**Questão 04.** No gráfico da questão anterior, do `pais_menor`, há uma queda vertiginosa, na década de 90, da expectativa de vida. Pesquise sobre o que poderia ter ocasionado tal queda.
+
+### I. Sobre o _dataset_ `cursos_prouni.csv`
+
+**Questão 05** Para responder essa questão, complete adequadamente o código abaixo, referente a construção de um *boxplot*  da varivável `nota_integral_ampla`, agrupadas pelo `turno` (estamos considerando a variável `dados_cursos`, como sendo o *dataset* `cursos_prouni.csv`).
+
+```{r, eval=FALSE}
+dados_cursos %>%
+  select(❓❓ , ❓❓) %>% 
+  drop_na() %>% 
+  ggplot() +
+  aes(x = ❓❓, y = ❓❓, fill = ❓❓) +
+  geom_boxplot(show.legend = FALSE) +
+  labs(
+    title = "Comparação das notas por turno",
+    x = "",
+    y = ""
+  ) +
+  scale_fill_viridis_d() +
+  theme_minimal()
+```
+
+  a. Pelo gráfico, qual dos turnos possui a maior mediana das notas? Explique.
+  b. Qual a média e a mediana do turno identificado no item anterior?
+  c. Qual dos cinco turnos possui menor homegeneidade na nota integral ampla?
+  d. Faça um gráfico de densidade dessas notas, facetando-as nos turnos. Esse gráfico também serviria para comparar as notas por turno? Explique.
+
+**Questão 06.** Qual a posição ocupa o estado da Bahia, no que se refere à frequência absoluta da variável `uf_busca`, disposta de forma decrescente? 
+
+**Questão 07.** Quantos cursos foram identificados, distintamente, na variável `nome`?
+
+**Questão 08.** Analise o código abaixo e execute-o (estamos considerando a variável `dados_curso` como sendo o *dataset* `cursos_prouni.csv`). O que você pode concluir com respeito aos cursos exibidos, comparativamente? (cite, pelo menos, duas características gráficas).
+
+```{r, eval=FALSE}
+dados_cursos %>% 
+  select(nome, nota_integral_ampla) %>%
+  drop_na() %>% 
+  filter(nome == "Medicina" | nome == "Direito") %>% 
+  ggplot() +
+  aes(nota_integral_ampla, nome, fill = nome) +
+  geom_density_ridges(show.legend = FALSE) +
+  scale_fill_viridis_d() +
+  labs(
+    title = "Comparação entre Medicina e Direito",
+    x = "",
+    y = ""
+  ) +
+  theme_minimal()
+```
+
+---
+
+## Dicas
+
+- Organize seu ambiente de trabalho com um Projeto em R;
+- Carrege os conjuntos de dados separadamente, pois se a memória do seu computador for pequena, pode causar lentidão;
+  + Por exemplo, leia o conjunto de dados `contracheque.csv`, resolva as questões referente a esse tópico e depois, no console, digite `rm(list = ls())`. Aí é só carregar um outro conjunto de dados.
+  + O comando `rm(list = ls())` limpa a memória armazenada até aquele momento pelas variáveis no `R`.
+- Quando deseja-se comparar qual das variáveis é a mais **homogênea** (Questão 01, item c), é necessário comparar a variabilidade em relação à média. Se a média é igual em cada grupo, usamos o **desvio padrão**. 
+Todavia, se a média em cada grupo é diferente, precisamos padronizar essa medida; e, nesse caso, usamos o **coeficiente de variação** (cv), em porcentagem. 
+Quanto menor a porcentagem do `cv`, mais homogênea é a distribuição do `nota_integral_ampla`.
+Define-se: $$\text{cv} = \frac{\text{desvio padrão}}{média} \cdot 100$$
+---
+
+```{r, eval=FALSE}
+                                         |//
+                                        (o o)
+                    +-------------oOO----(_)-----oOO-----------------+
+                    | ______              ______                     |
+                    | | ___ \             | ___ \                    |
+                    | | |_/ / ___   __ _  | |_/ / __ _____   ____ _  |
+                    | | ___ \/ _ \ / _` | |  __/ '__/ _ \ \ / / _` | |
+                    | | |_/ / (_) | (_| | | |  | | | (_) \ V / (_| | |
+                    | \____/ \___/ \__,_| \_|  |_|  \___/ \_/ \__,_| |
+                    |                                                |
+                    +------------------------------------------------+
+                                       |__|__|
+                                        || ||
+                                       ooO Ooo
+```

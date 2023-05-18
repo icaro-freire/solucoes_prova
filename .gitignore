@@ -3,3 +3,7 @@
 .Rdata
 .httr-oauth
 .DS_Store
+solucoes.Rmd
+solucoes.nb.html
+dados/
+R/
