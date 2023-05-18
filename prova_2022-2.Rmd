@@ -22,7 +22,7 @@ As bases de dados serão retiradas de nosso repositório do GitHub e do _site_
 Faça o _download_ dos seguintes conjuntos de dados:
 
 1. [Cursos e notas de corte do PROUNI 2018](https://drive.google.com/u/0/uc?id=1lnqYHylEWT8cN6vPZ-NRR8KfFAPNq43r&export=download)
-2. [Gapminter](https://downgit.evecalm.com/#/home?url=https://github.com/icaro-freire/dados_csv/blob/main/dados/csv/gapminder.csv)
+2. [Gapminder](https://downgit.evecalm.com/#/home?url=https://github.com/icaro-freire/dados_csv/blob/main/dados/csv/gapminder.csv)
 
 O uso do _software_ `R` é suficiente, mas não necessário.
 Ou seja, você pode usar qualquer outro _software_ que estiver mais familiarizado, todavia, as dicas que serão dadas em algumas questões abaixo, serão voltadas para os usuários do `R`.
@@ -68,11 +68,11 @@ dados_gapminder <- readr::read_csv("dados/gapminder.csv")
 a. Quantas variáveis e quantas observações existem nesse conjunto de dados?
 b. Indentifique os tipos de variáveis (qualitativas vs quantitativas; e suas subdivisões: nominal ou ordinal, discreta ou contínua)
 
-**Questão 02.** 
-a.Quantos países existem em cada continente? Ou seja, após agrupar por `continente`; exiba (distintamtente) a variável `pais` ; e, conte-os.
-b. Exclua o continente que possui a menor quantidade de países e faça o gráfico de `densidade` da variável `expectativa_de_via`, colocando uma transparência de 70% no argumento da densidade (`alpha = 0.7`). Qual sua interpretação para esse gráfico?
+**Questão 02.** Quantos países existem em cada continente? Ou seja, após agrupar por `continente`; exiba (distintamtente) a variável `pais` ; e, conte-os.
 
-**Questão 03.** Vamos investigar o contraste entre a relação da _expectativa de vida_ e o _pib per capita_ durante um intervalo de 50 anos (1957 até 2007).
+**Questão 03.** Exclua o continente que possui a menor quantidade de países e faça o gráfico de `densidade` da variável `expectativa_de_via`, colocando uma transparência de 70% no argumento da densidade (`alpha = 0.7`). Qual sua interpretação para esse gráfico?
+
+**Questão 04.** Vamos investigar o contraste entre a relação da _expectativa de vida_ e o _pib per capita_ durante um intervalo de 50 anos (1957 até 2007).
 Para tanto, construiremos um gráfico de pontos que possui algumas características: o tamanho do ponto relaciona-se ao tamanho da população; e, a cor do ponto realaciona-se com o continente. 
 
 ```{r}
@@ -125,7 +125,8 @@ c. Em 2007, encontre a expectativa de vida e o pib _per capita_ dos dois países
 d. Quais são os dois países com maior população (maior diâmetro do ponto) em 1957 e em 2007? O que aconteceu com o pib per capita e a expectativa de vida deles em 50 anos?
 e. Faça um gráfico de pontos relacionando _pib per capita_ e _expectativa de vida_ durante todos os anos do dataset. Coloque uma reta de regressão nesses dados e responda se há uma tendência positiva ou negativa entre essas variáveis. Use uma escala logarítimica no eixo x (para isso, basta adicionar `scale_x_log10()` à camada do `ggplot()`).
 
-**Questão 04.** As seguintes perguntas estão relacionadas ao continente Africano. 
+**Questão 05.** As seguintes perguntas estão relacionadas ao continente Africano. 
+
 a. Encontre os países com menor e maior expectativa de vida no ano de 1952.
 Chame o primeiro de `pais_menor` e o segundo de `pais_maior`. São os mesmos em 2007?
 b. O seguinte conjunto de códigos produz um gráfico de linhas relacionando a expectativa de vida ao longo dos anos, dos países `pais_menor` e `pais_maior`.
@@ -144,11 +145,11 @@ dados_gapminder |>
   theme_minimal()
 ```
 
-**Questão 04.** No gráfico da questão anterior, do `pais_menor`, há uma queda vertiginosa, na década de 90, da expectativa de vida. Pesquise sobre o que poderia ter ocasionado tal queda.
+**Questão 06.** No gráfico da questão anterior, do `pais_menor`, há uma queda vertiginosa, na década de 90, da expectativa de vida. Pesquise sobre o que poderia ter ocasionado tal queda.
 
 ### I. Sobre o _dataset_ `cursos_prouni.csv`
 
-**Questão 05** Para responder essa questão, complete adequadamente o código abaixo, referente a construção de um *boxplot*  da varivável `nota_integral_ampla`, agrupadas pelo `turno` (estamos considerando a variável `dados_cursos`, como sendo o *dataset* `cursos_prouni.csv`).
+**Questão 07** Para responder essa questão, complete adequadamente o código abaixo, referente a construção de um *boxplot*  da varivável `nota_integral_ampla`, agrupadas pelo `turno` (estamos considerando a variável `dados_cursos`, como sendo o *dataset* `cursos_prouni.csv`).
 
 ```{r, eval=FALSE}
 dados_cursos %>%
@@ -171,11 +172,11 @@ dados_cursos %>%
   c. Qual dos cinco turnos possui menor homegeneidade na nota integral ampla?
   d. Faça um gráfico de densidade dessas notas, facetando-as nos turnos. Esse gráfico também serviria para comparar as notas por turno? Explique.
 
-**Questão 06.** Qual a posição ocupa o estado da Bahia, no que se refere à frequência absoluta da variável `uf_busca`, disposta de forma decrescente? 
+**Questão 08.** Qual a posição ocupa o estado da Bahia, no que se refere à frequência absoluta da variável `uf_busca`, disposta de forma decrescente? 
 
-**Questão 07.** Quantos cursos foram identificados, distintamente, na variável `nome`?
+**Questão 09.** Quantos cursos foram identificados, distintamente, na variável `nome`?
 
-**Questão 08.** Analise o código abaixo e execute-o (estamos considerando a variável `dados_curso` como sendo o *dataset* `cursos_prouni.csv`). O que você pode concluir com respeito aos cursos exibidos, comparativamente? (cite, pelo menos, duas características gráficas).
+**Questão 10.** Analise o código abaixo e execute-o (estamos considerando a variável `dados_curso` como sendo o *dataset* `cursos_prouni.csv`). O que você pode concluir com respeito aos cursos exibidos, comparativamente? (cite, pelo menos, duas características gráficas).
 
 ```{r, eval=FALSE}
 dados_cursos %>% 
